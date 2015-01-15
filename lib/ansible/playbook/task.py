@@ -25,7 +25,7 @@ import sys
 class Task(object):
 
     __slots__ = [
-        'name', 'meta', 'action', 'when', 'async_seconds', 'async_poll_interval',
+        'name', 'templated_name', 'meta', 'action', 'when', 'async_seconds', 'async_poll_interval',
         'notify', 'module_name', 'module_args', 'module_vars', 'default_vars',
         'play', 'notified_by', 'tags', 'register', 'role_name',
         'delegate_to', 'first_available_file', 'ignore_errors',
@@ -304,3 +304,5 @@ class Task(object):
             if self.when:
                 new_conditions.append(self.when)
             self.when = new_conditions
+
+        self.templated_name = template.template_from_string(play.basedir, self.name, self.module_vars)
