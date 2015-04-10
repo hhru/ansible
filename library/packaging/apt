@@ -154,6 +154,7 @@ APT_ENV_VARS = dict(
 DPKG_OPTIONS = 'force-confdef,force-confold'
 APT_GET_ZERO = "0 upgraded, 0 newly installed"
 APTITUDE_ZERO = "0 packages upgraded, 0 newly installed"
+APT_SOURCES_LIST_PATH = "/etc/apt/sources.list"
 APT_LISTS_PATH = "/var/lib/apt/lists"
 APT_UPDATE_SUCCESS_STAMP_PATH = "/var/lib/apt/periodic/update-success-stamp"
 
@@ -503,6 +504,26 @@ def main():
                         # the old cache is less than cache_valid_time seconds old - so still valid
                         cache_valid = True
 
+                if cache_valid is True:
+                    for Path in (APT_SOURCES_LIST_PATH, APT_SOURCES_LIST_PATH + ".d"):
+                        try:
+                            list_mtime = os.stat(Path).st_mtime
+                        except:
+                            list_mtime = False
+
+                        if list_mtime is False:
+                            # No mtime could be read - looks like lists are not there
+                            # We update the cache to be safe
+                            cache_valid = False
+                        else:
+                            mtimestamp = datetime.datetime.fromtimestamp(mtime)
+                            list_mtimestamp = datetime.datetime.fromtimestamp(list_mtime)
+                            if list_mtimestamp > mtimestamp:
+                                # update the cache
+                                # sources list updated after cache, so needs update
+                                cache_valid = False
+                                break
+                        
             if cache_valid is not True:
                 cache.update()
                 cache.open(progress=None)
